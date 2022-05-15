@@ -22,5 +22,8 @@ public class Controller {
         returnMap.put("message", "Hello, Codefresh!");
         returnMap.put("chartVersion", chartVersion);
         returnMap.put("containerImage", containerImage);
+        return returnMap;
     }
+
+
 }
