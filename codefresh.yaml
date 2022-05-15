@@ -8,13 +8,13 @@ steps:
     stage: prepare
     type: git-clone
     repo: 'jlmayorga/spring-boot-demo'
-    revision: master
+    revision: main
     git: github
   build_app_image:
     title: Building Docker Image
     type: build
     stage: build
-    image_name: spring-boot-demo
+    image_name: jlmayorga/spring-boot-demo
     working_directory: ./
     tag: 'multi-stage'
     dockerfile: Dockerfile
