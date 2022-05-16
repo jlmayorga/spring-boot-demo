@@ -26,8 +26,6 @@ steps:
     title: Source security scan
     stage: verify
     image: 'snyk/snyk-cli:maven-3.6.3_java11'
-    environment:
-      - SNYK_AUTH=${{SNYK_TOKEN}}
     commands:
       - snyk auth
       - snyk monitor
