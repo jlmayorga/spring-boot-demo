@@ -17,7 +17,5 @@ steps:
     image_name: jlmayorga/spring-boot-demo
     working_directory: ./
     tags:
-      - "${{CF_BRANCH_TAG_NORMALIZED_LOWER_CASE}}"
       - "${{CF_SHORT_REVISION}}"
-      - latest
     dockerfile: Dockerfile
