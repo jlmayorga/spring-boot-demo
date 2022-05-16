@@ -16,6 +16,7 @@ steps:
     title: Building Docker Image
     type: build
     stage: build
+    disable_push: true
     image_name: jlmayorga/spring-boot-demo
     working_directory: ./
     tags:
@@ -28,11 +29,36 @@ steps:
     commands:
       - snyk monitor
       - snyk test --severity-threshold=high
+    on_success:
+      metadata:
+        set:
+          - '${{build_app_image.imageId}}':
+              - CF_QUALITY: true
+      on_fail:
+        metadata:
+          set:
+            - '${{build_app_image.imageId}}':
+                - CF_QUALITY: false
   scan_image:
     title: Container security scan
     stage: verify
     image: 'aquasec/trivy'
     commands:
-      - trivy image docker.io/jlmayorga/spring-boot-demo:${{CF_SHORT_REVISION}}
-
+      - trivy image ${{ build_app_image }}
+    on_success:
+      metadata:
+        set:
+          - '${{build_app_image.imageId}}':
+              - SECURITY_SCAN: true
+      on_fail:
+        metadata:
+          set:
+            - '${{build_app_image.imageId}}':
+                - SECURITY_SCAN: false
+  push-to-registry:
+    title: Pushing to container image registry
+    stage: push
+    type: push
+    candidate: '${{build_app_image}}'
+    tag: '${{CF_SHORT_REVISION}}'
 
