@@ -16,5 +16,7 @@ steps:
     stage: build
     image_name: jlmayorga/spring-boot-demo
     working_directory: ./
-    tag: 'multi-stage'
+    tags:
+      - "${{CF_BRANCH_TAG_NORMALIZED_LOWER_CASE}}"
+      - "${{CF_SHORT_REVISION}}"
     dockerfile: Dockerfile
