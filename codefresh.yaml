@@ -34,11 +34,11 @@ steps:
         set:
           - '${{build_app_image.imageId}}':
               - CF_QUALITY: true
-      on_fail:
-        metadata:
-          set:
-            - '${{build_app_image.imageId}}':
-                - CF_QUALITY: false
+    on_fail:
+      metadata:
+        set:
+          - '${{build_app_image.imageId}}':
+              - CF_QUALITY: false
   scan_image:
     title: Container security scan
     stage: verify
@@ -50,11 +50,11 @@ steps:
         set:
           - '${{build_app_image.imageId}}':
               - SECURITY_SCAN: true
-      on_fail:
-        metadata:
-          set:
-            - '${{build_app_image.imageId}}':
-                - SECURITY_SCAN: false
+    on_fail:
+      metadata:
+        set:
+          - '${{build_app_image.imageId}}':
+              - SECURITY_SCAN: false
   push-to-registry:
     title: Pushing to container image registry
     stage: push
