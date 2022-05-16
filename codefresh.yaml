@@ -13,7 +13,7 @@ steps:
     revision: main
     git: github
   build_app_image:
-    title: Building Docker Image
+    title: Building container image
     type: build
     stage: build
     disable_push: true
@@ -44,7 +44,7 @@ steps:
     stage: verify
     image: 'aquasec/trivy'
     commands:
-      - trivy image ${{ build_app_image }}
+      - trivy image ${{build_app_image.imageId}}
     on_success:
       metadata:
         set:
