@@ -27,8 +27,6 @@ steps:
     stage: verify
     image: 'snyk/snyk-cli:maven-3.6.3_java11'
     commands:
-      - echo $SNYK_TOKEN > snyk.token
-      - cat snyk.token
       - snyk auth
       - snyk monitor
   scan_image:
