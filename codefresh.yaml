@@ -16,7 +16,6 @@ steps:
     title: Building container image
     type: build
     stage: build
-    disable_push: true
     image_name: jlmayorga/spring-boot-demo
     working_directory: ./
     tags:
@@ -44,7 +43,7 @@ steps:
     stage: verify
     image: 'aquasec/trivy'
     commands:
-      - trivy image ${{build_app_image.imageId}}
+      - trivy image docker.io/jlmayorga/spring-boot-demo:${{CF_SHORT_REVISION}}
     on_success:
       metadata:
         set:
@@ -55,10 +54,4 @@ steps:
         set:
           - '${{build_app_image.imageId}}':
               - SECURITY_SCAN: false
-  push-to-registry:
-    title: Pushing to container image registry
-    stage: push
-    type: push
-    candidate: '${{build_app_image}}'
-    tag: '${{CF_SHORT_REVISION}}'
 
