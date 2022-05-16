@@ -19,4 +19,5 @@ steps:
     tags:
       - "${{CF_BRANCH_TAG_NORMALIZED_LOWER_CASE}}"
       - "${{CF_SHORT_REVISION}}"
+      - latest
     dockerfile: Dockerfile
