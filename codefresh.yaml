@@ -35,7 +35,7 @@ steps:
     image: 'aquasec/trivy'
     commands:
       - trivy image docker.io/jlmayorga/spring-boot-demo:${{CF_SHORT_REVISION}}
-  pushToRegistry:
+  push_to_registry:
     stage: push
     type: push
     title: Pushing container image to registry
