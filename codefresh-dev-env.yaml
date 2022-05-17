@@ -1,0 +1,49 @@
+# More examples of Codefresh YAML can be found at
+# https://codefresh.io/docs/docs/yaml-examples/examples/
+
+version: "1.0"
+# Stages can help you organize your steps in stages
+stages:
+  - "debug"
+  - "deploy-to-test"
+  - "deploy-to-prod"
+steps:
+  debug:
+    title: "Running test"
+    type: "freestyle" # Run any command
+    image: "ubuntu:latest" # The image in which command will be executed
+    commands:
+      - echo "${EVENT_NAMESPACE}/${EVENT_NAME}:${EVENT_TAG}"
+    stage: "debug"
+  DeployToTestEnvironment:
+    title: "Deploy to test environment"
+    stage: "deploy-to-test"
+    type: helm
+    arguments:
+      action: install
+      chart_name: spring-boot-demo-chart
+      skip_cf_stable_helm_repo: true
+      release_name: first
+      namespace: test
+      helm_version: 3.0.3
+      kube_context: my-cluster
+      custom_values:
+        - "ingress.host=test"
+        - "image.repository=${{EVENT_NAMESPACE}}/${{EVENT_NAME}}"
+        - "image.tag=${{EVENT_TAG}}"
+  ApproveToProdEnvironment:
+    stage: "deploy-to-prod"
+    type: pending-approval
+    title: "Promote image ${{EVENT_NAMESPACE}}/${{EVENT_NAME}}:${{EVENT_TAG}} to production?"
+    description: Step description
+    timeout:
+      duration: 2
+      finalState: denied
+      timeUnit: hours
+  DeployToProdEnvironment:
+    title: "Deploy to production environment"
+    stage: deploy-to-prod
+    type: push
+    candidate: "${{EVENT_NAMESPACE}}/${{EVENT_NAME}}:${{EVENT_TAG}}"
+    tag: prod
+    image_name: "${{EVENT_NAMESPACE}}/${{EVENT_NAME}}"
