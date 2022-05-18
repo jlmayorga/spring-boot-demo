@@ -63,36 +63,15 @@ steps:
     image: 'maven:3.8-openjdk-11'
     commands:
       - mvn -Dmaven.repo.local=/codefresh/volume/m2_repository org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.login=${{SONAR_TOKEN}} -Dsonar.host.url=https://sonarcloud.io -Dsonar.organization=jlmayorga -Dsonar.projectKey=xyz.jlmayorga:spring-boot-demo
-  deploy:
-    title: Deploying Helm Chart
-    type: helm
-    stage: deploy
-    arguments:
-      action: install
-      chart_name: spring-boot-demo-chart
-      skip_cf_stable_helm_repo: true
-      release_name: dev-env-${{CF_BRANCH_TAG_NORMALIZED}}
-      helm_version: 3.2.4
-      kube_context: my-cluster
-      namespace: ${{CF_BRANCH_TAG_NORMALIZED}}
-      cmd_ps: '--create-namespace --wait --timeout 5m'
-      custom_values:
-        - "ingress.host=${{CF_BRANCH_TAG_NORMALIZED}}"
-        - 'image_tag=${{CF_BRANCH_TAG_NORMALIZED}}'
 
-  add_pr_comment:
-    title: Adding comment on PR
-    stage: deploy
-    type: kostis-codefresh/github-pr-comment
-    fail_fast: false
+  call_cd_pipeline:
+    title: Deploy dev environment
+    stage: "deploy"
+    type: "codefresh-run"
     arguments:
-      PR_COMMENT_TEXT: "[CI] Staging environment is at https://${{CF_BRANCH_TAG_NORMALIZED}}.jlmayorga.xyz/hello/"
-      GIT_PROVIDER_NAME: 'github'
-  run_smoke_tests:
-    title: Smoke tests
-    stage: deploy
-    image: maven:3.8-openjdk-11
-    working_directory: "${{main_clone}}"
-    fail_fast: false
-    commands:
-      - mvn -Dmaven.repo.local=/codefresh/volume/m2_repository verify -Dserver.host=https://${{CF_BRANCH_TAG_NORMALIZED}}.jlmayorga.xyz/hello/  -Dserver.port=443
+      PIPELINE_ID: codefresh-dev-env-cd
+      VARIABLE:
+        - CF_BRANCH=${{CF_BRANCH}}
+        - CF_REVISION=${{CF_REVISION}}
+        - CF_BRANCH_TAG_NORMALIZED=${{CF_BRANCH_TAG_NORMALIZED}}
+        - CF_PULL_REQUEST_NUMBER=${{CF_PULL_REQUEST_NUMBER}}
