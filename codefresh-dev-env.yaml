@@ -69,7 +69,7 @@ steps:
     stage: "deploy"
     type: "codefresh-run"
     arguments:
-      PIPELINE_ID: codefresh-dev-env-cd
+      PIPELINE_ID: 62852a80024748be4baa0659
       VARIABLE:
         - CF_BRANCH=${{CF_BRANCH}}
         - CF_REVISION=${{CF_REVISION}}
