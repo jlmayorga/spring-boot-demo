@@ -42,7 +42,7 @@ steps:
   run_integration_tests:
     title: Integration tests
     stage: verify
-    image: maven:3.5.2-jdk-8-alpine
+    image: maven:3.8-openjdk-11
     commands:
       - mvn -Dmaven.repo.local=/codefresh/volume/m2_repository verify -Dserver.host=http://my-spring-app -Dsonar.organization=jlmayorga
     services:
@@ -60,7 +60,7 @@ steps:
   sonar_scan:
     title: Sonar Scan
     stage: verify
-    image: 'maven:3.8.1-jdk-11-slim'
+    image: 'maven:3.8-openjdk-11'
     commands:
       - mvn -Dmaven.repo.local=/codefresh/volume/m2_repository org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.login=${{SONAR_TOKEN}} -Dsonar.host.url=https://sonarcloud.io -Dsonar.organization=jlmayorga -Dsonar.projectKey=xyz.jlmayorga:spring-boot-demo
   clone:
@@ -97,7 +97,7 @@ steps:
   run_smoke_tests:
     title: Smoke tests
     stage: deploy
-    image: maven:3.5.2-jdk-8-alpine
+    image: maven:3.8-openjdk-11
     working_directory: "${{main_clone}}"
     fail_fast: false
     commands:
