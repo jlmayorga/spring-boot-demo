@@ -13,22 +13,22 @@ steps:
     stage: "prepare"
     git: github
 
-deploy:
-    title: Deploying Helm Chart
-    type: helm
-    stage: deploy
-    arguments:
-      action: install
-      chart_name: spring-boot-demo-chart
-      skip_cf_stable_helm_repo: true
-      release_name: dev-env-${{CF_BRANCH_TAG_NORMALIZED}}
-      helm_version: 3.2.4
-      kube_context: my-cluster
-      namespace: ${{CF_BRANCH_TAG_NORMALIZED}}
-      cmd_ps: '--create-namespace --wait --timeout 5m'
-      custom_values:
-        - "ingress.host=${{CF_BRANCH_TAG_NORMALIZED}}"
-        - 'image_tag=${{CF_BRANCH_TAG_NORMALIZED}}'
+  deploy:
+      title: Deploying Helm Chart
+      type: helm
+      stage: deploy
+      arguments:
+        action: install
+        chart_name: spring-boot-demo-chart
+        skip_cf_stable_helm_repo: true
+        release_name: dev-env-${{CF_BRANCH_TAG_NORMALIZED}}
+        helm_version: 3.2.4
+        kube_context: my-cluster
+        namespace: ${{CF_BRANCH_TAG_NORMALIZED}}
+        cmd_ps: '--create-namespace --wait --timeout 5m'
+        custom_values:
+          - "ingress.host=${{CF_BRANCH_TAG_NORMALIZED}}"
+          - 'image_tag=${{CF_BRANCH_TAG_NORMALIZED}}'
 
   add_pr_comment:
     title: Adding comment on PR
