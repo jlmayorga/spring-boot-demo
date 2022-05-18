@@ -1,49 +1,103 @@
-# More examples of Codefresh YAML can be found at
-# https://codefresh.io/docs/docs/yaml-examples/examples/
-
 version: "1.0"
-# Stages can help you organize your steps in stages
 stages:
-  - "debug"
-  - "deploy-to-test"
-  - "deploy-to-prod"
+  - "prepare"
+  - "verify"
+  - "deploy"
+
 steps:
-  debug:
-    title: "Running test"
-    type: "freestyle" # Run any command
-    image: "ubuntu:latest" # The image in which command will be executed
+  main_clone:
+    title: "Cloning repository"
+    type: "git-clone"
+    repo: 'jlmayorga/spring-boot-demo'
+    revision: "${{CF_REVISION}}"
+    stage: "prepare"
+
+  run_unit_tests:
+    title: Compile/Unit test
+    stage: prepare
+    image: 'maven:3.5.2-jdk-8-alpine'
     commands:
-      - echo "${EVENT_NAMESPACE}/${EVENT_NAME}:${EVENT_TAG}"
-    stage: "debug"
-  DeployToTestEnvironment:
-    title: "Deploy to test environment"
-    stage: "deploy-to-test"
+      - mvn -Dmaven.repo.local=/codefresh/volume/m2_repository package
+  build_app_image:
+    title: Building Docker Image
+    type: build
+    stage: prepare
+    image_name: jlmayorga/spring-boot-demo
+    working_directory: ./
+    tag: '${{CF_BRANCH}}'
+    dockerfile: Dockerfile
+  scan_code:
+    title: Source security scan
+    stage: verify
+    image: 'snyk/snyk-cli:maven-3.6.3_java11'
+    commands:
+      - snyk monitor
+  scan_image:
+    title: Container security scan
+    stage: verify
+    image: 'aquasec/trivy'
+    commands:
+      - trivy image docker.io/jlmayorga/spring-boot-demo:${{CF_BRANCH}}
+  run_integration_tests:
+    title: Integration tests
+    stage: verify
+    image: maven:3.5.2-jdk-8-alpine
+    commands:
+      - mvn -Dmaven.repo.local=/codefresh/volume/m2_repository verify -Dserver.host=http://my-spring-app -Dsonar.organization=jlmayorga
+    services:
+      composition:
+        my-spring-app:
+          image: '${{build_app_image}}'
+          ports:
+            - 8080
+      readiness:
+        timeoutSeconds: 30
+        periodSeconds: 15
+        image: byrnedo/alpine-curl
+        commands:
+          - "curl http://my-spring-app:8080/hello/"
+  sonar_scan:
+    title: Sonar Scan
+    stage: verify
+    image: 'maven:3.8.1-jdk-11-slim'
+    commands:
+      - mvn -Dmaven.repo.local=/codefresh/volume/m2_repository org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.login=${{SONAR_TOKEN}} -Dsonar.host.url=https://sonarcloud.io -Dsonar.organization=jlmayorga -Dsonar.projectKey=xyz.jlmayorga:spring-boot-demo
+  clone:
+    title: "Cloning repository"
+    type: "git-clone"
+    repo: "jlmayorga/spring-boot-demo-chart"
+    revision: main
+    stage: "deploy"
+  deploy:
+    title: Deploying Helm Chart
     type: helm
+    stage: deploy
+    working_directory: ./spring-boot-demo-chart
     arguments:
       action: install
       chart_name: spring-boot-demo-chart
-      skip_cf_stable_helm_repo: true
-      release_name: first
-      namespace: test
-      helm_version: 3.0.3
-      kube_context: my-cluster
+      release_name: dev-env
+      helm_version: 3.2.4
+      kube_context: default
+      namespace: ${{CF_BRANCH_TAG_NORMALIZED}}
+      cmd_ps: '--create-namespace --wait --timeout 5m'
       custom_values:
-        - "ingress.host=test"
-        - "image.repository=${{EVENT_NAMESPACE}}/${{EVENT_NAME}}"
-        - "image.tag=${{EVENT_TAG}}"
-  ApproveToProdEnvironment:
-    stage: "deploy-to-prod"
-    type: pending-approval
-    title: "Promote image ${{EVENT_NAMESPACE}}/${{EVENT_NAME}}:${{EVENT_TAG}} to production?"
-    description: Step description
-    timeout:
-      duration: 2
-      finalState: denied
-      timeUnit: hours
-  DeployToProdEnvironment:
-    title: "Deploy to production environment"
-    stage: deploy-to-prod
-    type: push
-    candidate: "${{EVENT_NAMESPACE}}/${{EVENT_NAME}}:${{EVENT_TAG}}"
-    tag: prod
-    image_name: "${{EVENT_NAMESPACE}}/${{EVENT_NAME}}"
+        - "ingress.host=${{CF_BRANCH_TAG_NORMALIZED}}"
+        - 'image_tag=${{CF_BRANCH_TAG_NORMALIZED}}'
+
+  add_pr_comment:
+    title: Adding comment on PR
+    stage: deploy
+    type: kostis-codefresh/github-pr-comment
+    fail_fast: false
+    arguments:
+      PR_COMMENT_TEXT: "[CI] Staging environment is at https://${{CF_BRANCH_TAG_NORMALIZED}}.jlmayorga.xyz/hello/"
+      GIT_PROVIDER_NAME: 'github'
+  run_smoke_tests:
+    title: Smoke tests
+    stage: deploy
+    image: maven:3.5.2-jdk-8-alpine
+    working_directory: "${{main_clone}}"
+    fail_fast: false
+    commands:
+      - mvn -Dmaven.repo.local=/codefresh/volume/m2_repository verify -Dserver.host=https://${{CF_BRANCH_TAG_NORMALIZED}}.jlmayorga.xyz/hello/  -Dserver.port=443
