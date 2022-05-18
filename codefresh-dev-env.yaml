@@ -11,6 +11,7 @@ steps:
     repo: 'jlmayorga/spring-boot-demo'
     revision: "${{CF_REVISION}}"
     stage: "prepare"
+    git: github
 
   run_unit_tests:
     title: Compile/Unit test
