@@ -63,23 +63,17 @@ steps:
     image: 'maven:3.8-openjdk-11'
     commands:
       - mvn -Dmaven.repo.local=/codefresh/volume/m2_repository org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.login=${{SONAR_TOKEN}} -Dsonar.host.url=https://sonarcloud.io -Dsonar.organization=jlmayorga -Dsonar.projectKey=xyz.jlmayorga:spring-boot-demo
-  clone:
-    title: "Cloning repository"
-    type: "git-clone"
-    repo: "jlmayorga/spring-boot-demo-chart"
-    revision: main
-    stage: "deploy"
   deploy:
     title: Deploying Helm Chart
     type: helm
     stage: deploy
-    working_directory: ./spring-boot-demo-chart
     arguments:
       action: install
       chart_name: spring-boot-demo-chart
-      release_name: dev-env
+      skip_cf_stable_helm_repo: true
+      release_name: dev-env-${{CF_BRANCH_TAG_NORMALIZED}}
       helm_version: 3.2.4
-      kube_context: default
+      kube_context: my-cluster
       namespace: ${{CF_BRANCH_TAG_NORMALIZED}}
       cmd_ps: '--create-namespace --wait --timeout 5m'
       custom_values:
