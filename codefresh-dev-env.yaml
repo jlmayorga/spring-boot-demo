@@ -16,7 +16,7 @@ steps:
   run_unit_tests:
     title: Compile/Unit test
     stage: prepare
-    image: 'maven:3.5.2-jdk-8-alpine'
+    image: 'maven:3.8-openjdk-11'
     commands:
       - mvn -Dmaven.repo.local=/codefresh/volume/m2_repository package
   build_app_image:
