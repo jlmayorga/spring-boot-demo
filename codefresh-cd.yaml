@@ -25,7 +25,7 @@ steps:
       skip_cf_stable_helm_repo: true
       release_name: first
       namespace: test
-      helm_version: 3.0.3
+      helm_version: 3.2.4
       kube_context: my-cluster
       custom_values:
         - "ingress.host=test"

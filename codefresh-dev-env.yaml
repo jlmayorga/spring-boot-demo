@@ -69,9 +69,26 @@ steps:
     stage: "deploy"
     type: "codefresh-run"
     arguments:
-      PIPELINE_ID: codefresh-dev-env-cd
+      PIPELINE_ID: 62852a80024748be4baa0659
       VARIABLE:
         - CF_BRANCH=${{CF_BRANCH}}
         - CF_REVISION=${{CF_REVISION}}
         - CF_BRANCH_TAG_NORMALIZED=${{CF_BRANCH_TAG_NORMALIZED}}
         - CF_PULL_REQUEST_NUMBER=${{CF_PULL_REQUEST_NUMBER}}
+
+  add_pr_comment:
+    title: Adding comment on PR
+    stage: deploy
+    type: kostis-codefresh/github-pr-comment
+    fail_fast: false
+    arguments:
+      PR_COMMENT_TEXT: "[CI] Staging environment is at https://${{CF_BRANCH_TAG_NORMALIZED}}.jlmayorga.xyz/hello/"
+      GIT_PROVIDER_NAME: 'github'
+  run_smoke_tests:
+    title: Smoke tests
+    stage: deploy
+    image: maven:3.8-openjdk-11
+    working_directory: "${{main_clone}}"
+    fail_fast: false
+    commands:
+      - mvn -Dmaven.repo.local=/codefresh/volume/m2_repository verify -Dserver.host=https://${{CF_BRANCH_TAG_NORMALIZED}}.jlmayorga.xyz/hello/  -Dserver.port=443
